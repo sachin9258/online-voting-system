@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Electronic Voting Machine | ECI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body { font-family: Arial, sans-serif; background: #e8edf3; margin: 0; }
+        .header { background: #0a7a3c; color: #fff; padding: 14px; text-align: center; font-size: 18px; font-weight: bold; }
+        .container { max-width: 1000px; margin: 25px auto; display: grid; grid-template-columns: 3fr 1.2fr; gap: 20px; }
+        .ballot { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+        .ballot h3 { margin-top: 0; text-align: center; }
+        .candidate { display: grid; grid-template-columns: 60px 1fr auto; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #ddd; }
+        .candidate:last-child { border: none; }
+        .symbol { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .symbol img { width: 100%; height: 100%; object-fit: contain; }
+        .party-name { font-size: 16px; font-weight: bold; }
+        .btn-box { display: flex; gap: 8px; }
+        .green-btn, .red-btn { width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; background: #16a34a; }
+        .red-btn { background: #dc2626; }
+        .green-btn:disabled, .red-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .control { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.15); text-align: center; }
+        .led { width: 30px; height: 30px; border-radius: 50%; background: #999; margin: 15px auto; transition: 0.3s; }
+        .led.green { background: #22c55e; box-shadow: 0 0 15px #22c55e; }
+        .led.red { background: #ff4444; box-shadow: 0 0 15px #ff4444; }
+        .vvpat { border: 2px dashed #0a7a3c; padding: 15px; margin-top: 15px; min-height: 90px; font-size: 15px; }
+        .locked { color: #dc2626; font-weight: bold; }
+        #voterBox { background: #f0fdf4; border: 2px solid #16a34a; padding: 12px; border-radius: 10px; margin-bottom: 15px; display: none; text-align: center; }
+        
+        /* Pause Overlay */
+        #pauseOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; color: white;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="pauseOverlay">
+    <h1 style="color: #ffd700;">ECI ALERT</h1>
+    <p style="font-size: 1.5rem;">Voting has been PAUSED by the Command Center.<br>Please wait for further instructions.</p>
+</div>
+
+<div class="header">भारत निर्वाचन आयोग – Electronic Voting Machine (Digital)</div>
+
+<div class="container">
+    <div class="ballot">
+        <div id="voterBox">
+            <p><b>स्वागत है:</b> <span id="voterName"></span></p>
+            <p><b>वोटर ID:</b> <span id="voterID"></span></p>
+        </div>
+
+        <h3>Ballot Unit</h3>
+
+        <div class="candidate">
+            <div class="symbol"><img src="bjp.jpg"></div>
+            <div class="party-name">BJP</div>
+            <div class="btn-box">
+                <button class="green-btn" onclick="castVote('BJP')"></button>
+                <button class="red-btn"></button>
+            </div>
+        </div>
+
+        <div class="candidate">
+            <div class="symbol"><img src="inc.webp"></div>
+            <div class="party-name">INC</div>
+            <div class="btn-box">
+                <button class="green-btn" onclick="castVote('INC')"></button>
+                <button class="red-btn"></button>
+            </div>
+        </div>
+
+        <div class="candidate">
+            <div class="symbol"><img src="aap.webp"></div>
+            <div class="party-name">AAP</div>
+            <div class="btn-box">
+                <button class="green-btn" onclick="castVote('AAP')"></button>
+                <button class="red-btn"></button>
+            </div>
+        </div>
+
+        <div class="candidate">
+            <div class="symbol"><img src="BSP.png"></div>
+            <div class="party-name">BSP</div>
+            <div class="btn-box">
+                <button class="green-btn" onclick="castVote('BSP')"></button>
+                <button class="red-btn"></button>
+            </div>
+        </div>
+
+        <div class="candidate">
+            <div class="symbol"><img src="NOTA.png"></div>
+            <div class="party-name">NOTA</div>
+            <div class="btn-box">
+                <button class="green-btn" onclick="castVote('NOTA')"></button>
+                <button class="red-btn"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="control">
+        <h3>Control Unit</h3>
+        <div id="led" class="led"></div>
+        <div id="vvpat" class="vvpat">कृपया अपना वोट डालें</div>
+    </div>
+</div>
+
+<script>
+let voter = null;
+let voted = false;
+const SERVER_URL = "http://localhost:5000";
+
+/* 1. CHECK ELECTION STATUS (ECI CONTROL) */
+async function checkElectionStatus() {
+    try {
+        const res = await fetch(`${SERVER_URL}/api/admin/check-status`);
+        const status = await res.json();
+        
+        const overlay = document.getElementById("pauseOverlay");
+        if (status.isPaused) {
+            overlay.style.display = "flex";
+            document.querySelectorAll(".green-btn").forEach(b => b.disabled = true);
+        } else {
+            overlay.style.display = "none";
+            if(!voted) document.querySelectorAll(".green-btn").forEach(b => b.disabled = false);
+        }
+    } catch (e) { console.log("Status Check Failed"); }
+}
+
+/* 2. LOAD VOTER DATA */
+async function fetchVoter() {
+    try {
+        const token = localStorage.getItem("voterToken");
+        if (!token) throw new Error("No token");
+
+        const res = await fetch(`${SERVER_URL}/api/voter/current`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert("Session Expired");
+            window.location.href = "../login.html";
+            return;
+        }
+
+        voter = data.voter;
+        document.getElementById("voterBox").style.display = "block";
+        document.getElementById("voterName").innerText = voter.name;
+        document.getElementById("voterID").innerText = voter.voterId;
+
+        // Start real-time status checking
+        setInterval(checkElectionStatus, 3000);
+
+    } catch (err) {
+        window.location.href = "../login.html";
+    }
+}
+
+/* 3. CAST VOTE */
+async function castVote(party) {
+    if (voted || !voter) return;
+
+    // Final status check before allowing vote
+    const statusRes = await fetch(`${SERVER_URL}/api/admin/check-status`);
+    const status = await statusRes.json();
+    if (status.isPaused) {
+        alert("Action Blocked: Election is currently PAUSED by ECI.");
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem("voterToken");
+        const res = await fetch(`${SERVER_URL}/api/voter/vote`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ party })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.msg);
+            return;
+        }
+
+        voted = true;
+        document.getElementById("led").classList.add("green");
+        document.getElementById("vvpat").innerHTML = `आपने <b>${party}</b> को वोट दिया है<br>धन्यवाद`;
+        speakHindi(`आपने ${party} को सफलतापूर्वक वोट दिया है`);
+
+        setTimeout(lockEVM, 3000);
+
+    } catch (err) {
+        alert("Vote submission failed");
+    }
+}
+
+function lockEVM() {
+    document.querySelectorAll(".green-btn,.red-btn").forEach(btn => btn.disabled = true);
+    document.getElementById("vvpat").innerHTML = `<span class="locked">वोट दर्ज हो चुका है। मशीन लॉक है।</span>`;
+}
+
+function speakHindi(text) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = "hi-IN";
+    window.speechSynthesis.speak(msg);
+}
+
+fetchVoter();
+</script>
+</body>
+</html>

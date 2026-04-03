@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Track Services | ECI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f4f6f9, #dbeafe);
+      margin: 0;
+    }
+
+    .header {
+      background: #0b5ed7;
+      color: #fff;
+      padding: 18px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 15px;
+    }
+
+    .boxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .box {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: .3s;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .section {
+      display: none;
+      margin-top: 30px;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    input {
+      padding: 12px;
+      width: 97%;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px 18px;
+      background: #198754;
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: .3s;
+    }
+
+    button:hover { background: #157347; }
+
+    /* ================= ID CARD DESIGN ================= */
+    #idCard {
+      width: 450px;
+      height: 280px;
+      background: #fff;
+      border: 1px solid #333;
+      border-radius: 12px;
+      margin: 25px auto;
+      position: relative;
+      overflow: hidden;
+      display: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e4/Election_Commission_of_India_Logo.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 55%;
+      background-color: rgba(255, 255, 255, 0.96);
+      background-blend-mode: overlay;
+    }
+
+    .card-top {
+      background: #0b5ed7;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      border-bottom: 3px solid #f99d1c;
+    }
+
+    .card-top h4 { margin: 0; font-size: 14px; }
+    .card-top p { margin: 0; font-size: 10px; }
+
+    .card-main { display: flex; padding: 15px; }
+    .photo-area { width: 30%; text-align: center; }
+    #cardPhoto { width: 100px; height: 120px; border: 1px solid #555; object-fit: cover; }
+
+    .details-area { width: 70%; padding-left: 15px; font-size: 12px; }
+    .voter-no-strip { background: #333; color: #fff; padding: 3px 8px; display: inline-block; font-weight: bold; margin-bottom: 10px; border-radius: 3px; }
+
+    .field { margin-bottom: 6px; }
+    .label { font-size: 9px; color: #666; font-weight: bold; display: block; }
+    .val { font-size: 13px; font-weight: 700; color: #111; }
+
+    .hologram-circle {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #ffd700, #fff, #ffd700);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    #qrcode-container { position: absolute; bottom: 15px; right: 15px; background: white; padding: 2px; }
+
+    /* ================= CANDIDATE GRID DESIGN ================= */
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .candidate-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 15px;
+      background: #fff;
+      border-left: 5px solid #0b5ed7;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .party-badge { display: inline-block; padding: 2px 10px; background: #e9f0ff; color: #0b5ed7; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+    .info-row { display: flex; justify-content: space-between; font-size: 13px; margin: 5px 0; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px; }
+    .info-val { font-weight: 600; }
+    .alert-red { color: #dc3545; }
+    .alert-green { color: #198754; }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">Election Commission of India - Track Services</div>
+  <div class="container">
+
+    <div class="boxes">
+      <div class="box" onclick="openSection('trackReg')">
+        <h3>Track Your Registration</h3>
+        <p>Check voter status</p>
+      </div>
+      <div class="box" onclick="openSection('showCard')">
+        <h3>Show Your ID Card</h3>
+        <p>Digital Voter ID</p>
+      </div>
+      <div class="box" onclick="openSection('candidateInfo')">
+        <h3>Know Your Candidate</h3>
+        <p>Assets & Records</p>
+      </div>
+    </div>
+
+    <div class="section" id="trackReg">
+      <h3>Track Voter Registration</h3>
+      <input id="trackAadhaar" placeholder="Enter Aadhaar Number">
+      <button onclick="trackRegistration()">Track Now</button>
+      <p id="trackResult" style="margin-top:15px;"></p>
+    </div>
+
+    <div class="section" id="showCard">
+      <h3>Generate E-Voter Card</h3>
+      <input id="cardAadhaar" placeholder="Enter Aadhaar Number">
+      <button onclick="showCard()">View Card</button>
+
+      <div id="idCard">
+        <div class="hologram-circle"></div>
+        <div class="card-top">
+          <p>भारत निर्वाचन आयोग</p>
+          <h4>ELECTION COMMISSION OF INDIA</h4>
+        </div>
+        <div class="card-main">
+          <div class="photo-area"><img id="cardPhoto" src=""></div>
+          <div class="details-area">
+            <div class="voter-no-strip" id="cVoterID"></div>
+            <div class="field"><span class="label">Name / नाम:</span><span class="val" id="cName"></span></div>
+            <div class="field"><span class="label">DOB / जन्म तिथि:</span><span class="val" id="cDOB"></span></div>
+            <div class="field"><span class="label">Address / पता:</span><span class="val" id="cAddress"></span></div>
+          </div>
+        </div>
+        <div id="qrcode-container"></div>
+      </div>
+
+      <div style="text-align: center; margin-top: 15px;">
+        <button id="dlBtn" style="display:none; background: #0b5ed7;" onclick="downloadCard()">Download PNG</button>
+      </div>
+    </div>
+
+    <div class="section" id="candidateInfo">
+      <h3>Search Candidate by Constituency</h3>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <input id="searchCons" placeholder="e.g. khair" style="margin:0;">
+        <button onclick="searchCandidates()">Search</button>
+      </div>
+      <div id="candidateList" class="candidate-grid"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    function openSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+
+    // 1. Track Registration
+    async function trackRegistration() {
+      const aadhaar = document.getElementById('trackAadhaar').value.trim();
+      const resEl = document.getElementById('trackResult');
+      if (!aadhaar) return alert("Enter Aadhaar");
+      try {
+        const res = await fetch(`http://localhost:5000/api/voter/track/${aadhaar}`);
+        const data = await res.json();
+        if (data.success) {
+          resEl.innerHTML = `<b style="color:green">✅ Approved:</b> ${data.voter.name} (Voter ID: ${data.voter.voterId})`;
+        } else {
+          resEl.innerHTML = `<b style="color:red">❌ Not Found</b>`;
+        }
+      } catch (e) { resEl.innerText = "Error connecting to server."; }
+    }
+
+    // 2. Show ID Card with local QR
+    async function showCard() {
+      const aadhaar = document.getElementById('cardAadhaar').value.trim();
+      if (!aadhaar) return alert("Enter Aadhaar");
+      try {
+        const res = await fetch(`http://localhost:5000/api/voter/track/${aadhaar}`);
+        const data = await res.json();
+        if (data.success) {
+          const v = data.voter;
+          document.getElementById('idCard').style.display = 'block';
+          document.getElementById('dlBtn').style.display = 'inline-block';
+          document.getElementById('cName').innerText = v.name.toUpperCase();
+          document.getElementById('cVoterID').innerText = v.voterId;
+          document.getElementById('cDOB').innerText = v.dob.split('T')[0];
+          document.getElementById('cAddress').innerText = v.address;
+          document.getElementById('cardPhoto').src = `http://localhost:5000/uploads/${v.photo}`;
+
+          // Generate QR locally
+          const qrCont = document.getElementById('qrcode-container');
+          qrCont.innerHTML = ""; 
+          new QRCode(qrCont, { text: `VoterID:${v.voterId}|Name:${v.name}`, width: 60, height: 60 });
+
+        } else { alert("Voter not found"); }
+      } catch (e) { alert("Server error"); }
+    }
+
+    // 3. Search Candidate (Upgraded)
+    async function searchCandidates() {
+      const cons = document.getElementById('searchCons').value.trim();
+      const list = document.getElementById('candidateList');
+      if (!cons) return alert("Enter constituency name");
+
+      list.innerHTML = "Searching...";
+      try {
+        const res = await fetch(`http://localhost:5000/api/candidate/all?constituency=${cons}`);
+        const data = await res.json();
+        
+        if (!data.length) { list.innerHTML = "No candidates found."; return; }
+
+        list.innerHTML = data.map(c => `
+          <div class="candidate-card">
+            <div class="party-badge">${c.party}</div>
+            <h4 style="margin:5px 0">${c.name}</h4>
+            <div class="info-row"><span>Education:</span><span class="info-val">${c.education.toUpperCase()}</span></div>
+            <div class="info-row"><span>Assets:</span><span class="info-val alert-green">₹ ${c.assets} Cr</span></div>
+            <div class="info-row"><span>Criminal Records:</span><span class="info-val ${c.criminalRecords.toLowerCase() === 'none' ? 'alert-green' : 'alert-red'}">${c.criminalRecords}</span></div>
+            <div class="info-row"><span>Constituency:</span><span class="info-val">${c.constituency}</span></div>
+          </div>
+        `).join('');
+      } catch (e) { list.innerHTML = "Server Error."; }
+    }
+
+    function downloadCard() {
+      const card = document.getElementById('idCard');
+      html2canvas(card, { useCORS: true, scale: 3 }).then(canvas => {
+        const a = document.createElement('a');
+        a.download = "Voter_ID.png";
+        a.href = canvas.toDataURL();
+        a.click();
+      });
+    }
+  </script>
+</body>
+</html>

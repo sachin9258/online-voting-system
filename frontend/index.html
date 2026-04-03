@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ECI.GOV.IN</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<div class="header">
+  <div class="nav">
+    <div class="left">
+      <div class="logo">
+        <img src="logo.png" alt="ECI">
+        <span>ELECTION COMMISSION OF INDIA</span>
+      </div>
+    </div>
+    <div class="right">
+      <a href="login.html" class="login-button">CLICK FOR VOTE</a>
+      <div class="ind">
+        <a href="https://www.india.gov.in" target="_blank">
+          <img src="gov.svg" class="invert" alt="Government of India">
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="eci-title">
+  Welcome to Election Commission of India
+  <span class="hindi-text">भारत निर्वाचन आयोग में आपका स्वागत है</span>
+  <span class="moving-line"></span>
+</h2>
+
+<div class="register-banner">REGISTER YOURSELF</div>
+
+<!-- ================= MAIN REGISTRATION ================= -->
+<div class="main">
+<div class="registration">
+
+<!-- ========== ROLE BOXES ========== -->
+<div class="role-boxes">
+  <div class="role-box voter-box" onclick="openForm('voterForm')">
+    <h3>Voter</h3><p>Register as voter</p>
+  </div>
+  <div class="role-box candidate-box" onclick="openForm('candidateForm')">
+    <h3>Candidate</h3><p>Login / Register as candidate</p>
+  </div>
+  <div class="role-box admin-box" onclick="openForm('adminForm')">
+    <h3>Admin</h3><p>Login as admin</p>
+  </div>
+</div>
+
+<!-- ================= VOTER FORM ================= -->
+<div class="role-form" id="voterForm" style="display:none;">
+<h3>Voter Registration</h3>
+<input id="voterName" placeholder="Full Name">
+<input id="voterAadhaar" placeholder="Aadhaar Number" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'')">
+<input type="date" id="voterDOB">
+<input id="voterAddress" placeholder="Address">
+<input id="voterMobile" placeholder="Mobile Number">
+
+<button onclick="sendOTP()">Send OTP</button>
+<input id="otpInput" placeholder="Enter OTP">
+<button onclick="verifyOTP()">Verify OTP</button>
+<p id="otpStatus">OTP not verified</p>
+
+<p>Upload your face image:</p>
+<input type="file" id="faceUpload" accept="image/*">
+<button onclick="uploadFace()">Upload Face</button>
+<p id="faceStatus">Face not uploaded</p>
+
+<button id="registerBtn" disabled onclick="registerVoter()">
+  <span id="btnText">Register Voter</span>
+  <span id="btnSpinner" class="spinner" style="display:none;"></span>
+</button>
+
+<p id="voterIDDisplay"></p>
+<button id="proceedVoteBtn" onclick="proceedToVote()">Proceed to Vote</button>
+</div>
+
+<!-- ================= ADMIN FORM ================= -->
+<div class="role-form" id="adminForm" style="display:none;">
+<h3>Admin Login</h3>
+<input id="adminID" placeholder="Admin ID">
+<input type="password" id="adminPass" placeholder="Password">
+<button onclick="loginAdmin()">Login</button>
+<p id="adminStatus"></p>
+</div>
+
+<!-- ================= CANDIDATE FORM ================= -->
+<div class="role-form" id="candidateForm" style="display:none;">
+    <h3 id="candidateTitle">Candidate Login</h3>
+
+    <div id="candidateLoginSection">
+        <input id="loginEmail" placeholder="Email Address">
+        <input type="password" id="loginPass" placeholder="Password">
+        <button onclick="loginCandidate()" style="width: 100%; background: #007bff; margin-top: 10px;">Login</button>
+        
+        <p style="margin-top:15px; font-size: 14px; text-align: center;">
+            New User? <a href="javascript:void(0)" onclick="showSignupForm()" style="color: #28a745; font-weight: bold; text-decoration: none;">Create Account / Signup</a>
+        </p>
+    </div>
+
+    <div id="candidateSignupSection" style="display: none;">
+        <input id="cName" placeholder="Full Name">
+        <input id="cEmail" placeholder="Email Address">
+        
+        <div style="display: flex; gap: 5px; margin-top: 5px;">
+            <input id="cOTPInput" placeholder="Enter OTP" style="flex: 2;">
+            <button onclick="generateCandidateOTP()" style="flex: 1; font-size: 12px; background: #6c757d;">Get OTP</button>
+        </div>
+        <button onclick="verifyCandidateOTP()" id="cVerifyBtn" style="width: 100%; background: #ffc107; color: black; margin-top: 5px;">Verify OTP</button>
+        
+        <div id="cExtendedFields" style="display: none; margin-top: 10px; border-top: 1px dashed #ccc; ;">
+            <p style="font-size: 12px; color: green; margin-bottom: 5px;">✅ OTP Verified! Complete your profile:</p>
+            <input id="cAadhaar" placeholder="Aadhaar Number (12 Digits)">
+            <input id="cParty" placeholder="Party Name (e.g. BJP, INC, Independent)">
+            <input id="cConstituency" placeholder="Constituency (Area Name)">
+            <input type="password" id="cNewPass" placeholder="Set Your Password">
+            <button onclick="registerCandidate()" style="width: 100%; background: #28a745; margin-top: 10px;">Final Register</button>
+        </div>
+
+        <p style="margin-top:15px; font-size: 14px; text-align: center;">
+            Already have an account? <a href="javascript:void(0)" onclick="showLoginForm()" style="color: #007bff; font-weight: bold; text-decoration: none;">Back to Login</a>
+        </p>
+    </div>
+
+    <p id="cStatus" style="font-weight: bold; margin-top: 10px; text-align: center; font-size: 13px;"></p>
+</div>
+
+<!-- ================= SERVICES SECTION ================= -->
+<div class="services-section">
+<h2>Services</h2>
+<div class="services-grid">
+<a href="services/electoral.html" class="service-link">
+<div class="service-box">
+<img src="download.png">
+<h3>Download Electoral Roll</h3>
+<p>Download electoral roll PDF.</p>
+</div>
+</a>
+<a href="services/track.html" class="service-link">
+<div class="service-box">
+<img src="icons8-track.gif">
+<h3>Track Application Status</h3>
+<p>Track your form status.</p>
+</div>
+</a>
+<a href="services/bookblo.html" class="service-link">
+<div class="service-box">
+<img src="icons8-call-center.gif">
+<h3>Book BLO Call</h3>
+<p>Request call with BLO.</p>
+</div>
+</a>
+<a href="services/e-epic.html" class="service-link">
+<div class="service-box">
+<img src="icons8-gift.gif">
+<h3>E-EPIC services</h3>
+<p>Download digital voter card.</p>
+</div>
+</a>
+<a href="eci-portal.html" class="service-link" style="text-decoration: none; color: inherit;">
+  <div class="service-box">
+    <img src="SEARCH.PNG.gif">
+    <h3>WELCOME CITIZENS</h3>
+    <p>search official Data</p>
+  </div>
+</a>
+</div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<div class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h3>About ECI</h3>
+      <p>Election Commission of India ensures free and fair elections.</p>
+    </div>
+    <div class="footer-section">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="register.html">Voter Registration</a></li>
+        <li><a href="services/electoral.html">Electoral Roll</a></li>
+        <li><a href="services/e-epic.html">Services</a></li>
+        <li><a href="services/track.html">Track Application</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact</h3>
+      <p>New Delhi - 110001</p>
+      <p><a href="mailto:info@eci.gov.in">info@eci.gov.in</a></p>
+    </div>
+    <div class="footer-section">
+      <h3>Follow Us</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/ECI" target="_blank"><img src="icons8-facebook-circled.gif" alt="Facebook"></a>
+        <a href="https://twitter.com/ECI" target="_blank"><img src="icons8-twitter-bird.gif" alt="Twitter"></a>
+        <a href="https://www.linkedin.com/in/yourusername" target="_blank"><img src="icons8-linkedin-logo.gif" alt="linkedin"></a>
+        <a href="https://www.youtube.com/ECIIndia" target="_blank"><img src="icons8-youtube-logo.gif" alt="YouTube"></a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 Election Commission of India</div>
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+let otp = null;
+let otpVerified = false;
+let faceCaptured = false;
+let alreadyRegistered = false;
+
+const otpStatus = document.getElementById("otpStatus");
+const registerBtn = document.getElementById("registerBtn");
+const proceedVoteBtn = document.getElementById("proceedVoteBtn");
+const voterIDDisplay = document.getElementById("voterIDDisplay");
+
+proceedVoteBtn.disabled = true;
+
+// FORM SWITCH
+function openForm(id){
+ document.querySelectorAll('.role-form').forEach(f=>f.style.display="none");
+ document.getElementById(id).style.display="block";
+}
+
+// AGE CALCULATION
+function calculateAge(dob){
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+// OTP FUNCTIONS
+function sendOTP(){
+ otp = Math.floor(100000 + Math.random()*900000);
+ alert("Demo OTP: " + otp);
+ otpStatus.innerText = "OTP sent";
+}
+
+function verifyOTP(){
+ if(document.getElementById("otpInput").value == otp){
+   otpVerified = true;
+   otpStatus.innerText = "OTP verified ✅";
+ } else {
+   alert("❌ Invalid OTP");
+ }
+ checkEnable();
+}
+
+// FACE UPLOAD
+function uploadFace(){
+ const file = document.getElementById("faceUpload").files[0];
+ if(!file){ 
+   alert("Select image first"); 
+   return; 
+ }
+ faceCaptured = true;
+ document.getElementById("faceStatus").innerText = "Face uploaded ✅";
+ checkEnable();
+}
+
+// ENABLE REGISTER BUTTON
+function checkEnable(){
+ registerBtn.disabled = !(otpVerified && faceCaptured);
+}
+//voterregistrtion
+async function registerVoter() {
+  if(!otpVerified){ alert("❌ पहले OTP सत्यापित करें"); return; }
+  if(!faceCaptured){ alert("❌ पहले चेहरा अपलोड करें"); return; }
+
+  const name = document.getElementById("voterName").value.trim();
+  const aadhaar = document.getElementById("voterAadhaar").value.trim();
+  const dob = document.getElementById("voterDOB").value;
+  const mobile = document.getElementById("voterMobile").value.trim();
+  const address = document.getElementById("voterAddress").value.trim();
+  const faceFile = document.getElementById("faceUpload").files[0];
+
+  // Client-side validation
+  if(!name || !aadhaar || !dob || !mobile || !address || !faceFile){ 
+    alert("❌ सभी जानकारी भरना अनिवार्य है"); return; 
+  }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("aadhaarNumber", aadhaar);
+  formData.append("dob", dob);
+  formData.append("mobile", mobile);
+  formData.append("address", address);
+  formData.append("photo", faceFile);
+
+  registerBtn.disabled = true;
+  document.getElementById("btnText").innerText = "प्रक्रिया चल रही है...";
+  document.getElementById("btnSpinner").style.display = "inline-block";
+
+  try {
+    // Relative URL use kar rahe hain kyunki frontend-backend same port (5000) par hain
+    const res = await fetch("/api/voter/register", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      if (result.success) {
+        // Case 1: Naya Registration
+        voterIDDisplay.innerHTML = `<div style="color:green; margin-top:10px;">✅ पंजीकरण सफल!<br><b>Voter ID:</b> ${result.voterId}</div>`;
+        proceedVoteBtn.disabled = false;
+        registerBtn.style.display = "none"; // Button hide kar dein
+      } 
+      else if (result.alreadyRegistered) {
+        // Case 2: Pehle se registered (No Alert, just message)
+        voterIDDisplay.innerHTML = `<div style="color:orange; margin-top:10px;">⚠️ आप पहले से पंजीकृत हैं।<br><b>Voter ID:</b> ${result.voterId}</div>`;
+        proceedVoteBtn.disabled = false;
+        registerBtn.disabled = true;
+      } 
+      else {
+        alert("❌ समस्या: " + result.msg);
+      }
+    } else {
+      // Case 3: 400 ya 500 errors
+      alert("❌ पंजीकरण विफल: " + (result.msg || "सर्वर त्रुटि"));
+    }
+
+  } catch (err) {
+    console.error("Fetch Error:", err);
+    alert("❌ सर्वर से संपर्क नहीं हो पा रहा है। कृपया इंटरनेट या सर्वर चेक करें।");
+  } finally {
+    document.getElementById("btnText").innerText = "Register Voter";
+    document.getElementById("btnSpinner").style.display = "none";
+    if (!proceedVoteBtn.disabled) registerBtn.disabled = true; 
+    else registerBtn.disabled = false;
+  }
+}
+
+// ADMIN LOGIN
+function loginAdmin(){
+  const id = document.getElementById("adminID").value.trim();
+  const pass = document.getElementById("adminPass").value.trim();
+  
+  if(id === "admin" && pass === "admin"){ 
+    
+    localStorage.setItem("user", JSON.stringify({ name: "ECI Admin", role: "ECI" }));
+    window.location.href = "eciadmin.html"; 
+  } else { 
+    alert("Invalid credentials"); 
+  }
+}
+// CANDIDATE LOGIN
+// ================= CANDIDATE PORTAL FUNCTIONS =================
+
+let currentOTP = null;
+
+// --- LOGIN FUNCTION (DB ID Based Redirect) ---
+async function loginCandidate() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    const status = document.getElementById('cStatus');
+
+    if (!email || !pass) {
+        alert("Enter email & password");
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/candidate/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password: pass })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const candidateId = data.candidateId;
+            alert(`Welcome back! Redirecting...`);
+            window.location.href = `candidate.html?id=${candidateId}`;
+        } else {
+            alert("❌ " + (data.msg || "Invalid Credentials"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server Error! Check if backend is running.");
+    }
+}
+
+// --- UI SWITCH FUNCTIONS ---
+function showSignupForm() {
+    document.getElementById('candidateLoginSection').style.display = 'none';
+    document.getElementById('candidateSignupSection').style.display = 'block';
+    document.getElementById('candidateTitle').innerText = "Candidate Signup";
+    document.getElementById('cStatus').innerText = "";
+}
+
+function showLoginForm() {
+    document.getElementById('candidateSignupSection').style.display = 'none';
+    document.getElementById('candidateLoginSection').style.display = 'block';
+    document.getElementById('candidateTitle').innerText = "Candidate Login";
+    document.getElementById('cStatus').innerText = "";
+}
+
+// --- SIGNUP LOGIC (OTP & REGISTER) ---
+function generateCandidateOTP() {
+    const email = document.getElementById('cEmail').value.trim();
+    if (!email) return alert("Please enter email address first!");
+
+    currentOTP = Math.floor(1000 + Math.random() * 9000);
+    console.log("----------------------------");
+    console.log(`🔑 CANDIDATE SIGNUP OTP: ${currentOTP}`);
+    console.log("----------------------------");
+    
+    const status = document.getElementById('cStatus');
+    status.innerText = `OTP sent! Check Console (F12). Demo OTP: ${currentOTP}`;
+    status.style.color = "blue";
+}
+
+function verifyCandidateOTP() {
+    const input = document.getElementById('cOTPInput').value.trim();
+    if (input == currentOTP && currentOTP !== null) {
+        document.getElementById('cExtendedFields').style.display = 'block';
+        document.getElementById('cVerifyBtn').style.display = 'none';
+        document.getElementById('cStatus').innerText = "✅ OTP Verified!";
+        document.getElementById('cStatus').style.color = "green";
+    } else {
+        alert("Invalid OTP!");
+    }
+}
+
+async function registerCandidate() {
+    const payload = {
+        name: document.getElementById('cName').value.trim(),
+        email: document.getElementById('cEmail').value.trim(),
+        aadhaarNumber: document.getElementById('cAadhaar').value.trim(),
+        partyName: document.getElementById('cParty').value.trim(),
+        constituency: document.getElementById('cConstituency').value.trim(),
+        password: document.getElementById('cNewPass').value.trim()
+    };
+
+    if(!payload.aadhaarNumber || !payload.password) return alert("Please fill all details!");
+
+    try {
+        const res = await fetch("/api/candidate/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            alert("Registration Successful! Now Login.");
+            showLoginForm();
+        } else {
+            alert("❌ " + data.msg);
+        }
+    } catch (err) {
+        alert("❌ Server Error!");
+    }
+}
+
+// PROCEED TO VOTE
+function proceedToVote(){ window.location.href="login.html"; }
+
+</script>
+</body>
+</html>

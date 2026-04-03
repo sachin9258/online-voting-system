@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Vote Status</title>
+<style>
+body{ font-family:Arial,sans-serif; background:#f4f6f9; padding:20px;}
+.container{ max-width:700px; margin:auto; background:white; padding:20px; border-radius:8px; }
+h2{text-align:center;}
+p{font-size:16px; margin:6px 0;}
+.success{color:green;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Vote Status</h2>
+  <p><b>Name:</b> <span id="name">Loading...</span></p>
+  <p><b>Voter ID:</b> <span id="voterId">----</span></p>
+  <p><b>Constituency:</b> <span id="constituency">----</span></p>
+  <p><b>Voted Party:</b> <span id="votedParty">----</span></p>
+  <p><b>Vote Date:</b> <span id="voteDate">----</span></p>
+  <p><b>Vote Time:</b> <span id="voteTime">----</span></p>
+</div>
+
+<!-- 🔥 ADD THIS (Socket.io) -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+const socket = io("http://localhost:5000"); // 🔥 connect socket
+
+const urlParams = new URLSearchParams(window.location.search);
+const voterId = urlParams.get("voterId");
+
+if(!voterId) {
+  alert("Voter ID missing!");
+  window.location.href = "../login.html";
+}
+
+async function loadStatus(){
+  try{
+    const res = await fetch(`http://localhost:5000/api/voter/status/${voterId}`);
+    const data = await res.json();
+
+    if(data.success){
+      document.getElementById("name").innerText = data.voter.name;
+      document.getElementById("voterId").innerText = data.voter.voterId;
+      document.getElementById("constituency").innerText = data.voter.constituency;
+      document.getElementById("votedParty").innerText = data.voter.votedParty;
+      document.getElementById("voteDate").innerText = data.voter.voteDate;
+      document.getElementById("voteTime").innerText = data.voter.voteTime;
+
+      // 🔥🔥 IMPORTANT PART (SEND LIVE UPDATE)
+      socket.emit("voteCast", {
+        candidate: data.voter.votedParty
+      });
+
+    }else{
+      alert(data.msg);
+    }
+  }catch(err){ 
+    console.error(err); 
+    alert("Server error"); 
+  }
+}
+
+loadStatus();
+</script>
+</body>
+</html>

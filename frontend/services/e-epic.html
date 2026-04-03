@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-EPIC Demo Portal | ECI</title>
+<link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<style>
+    * {margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif;}
+    body {background:#f4f6f8; display:flex; flex-direction:column; min-height:100vh;}
+    
+    .header {width:100%; background:#0f172a; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; position: sticky; top: 0; z-index: 1000;}
+    .header .logo {display: flex; align-items: center; gap: 10px;}
+    .header img {height:45px;}
+    .header span {font-size:18px; font-weight:bold;}
+
+    .container {margin:30px auto; background:#fff; padding:30px; border-radius:12px; width:95%; max-width:900px; box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+    h2 {margin-bottom:20px; color:#0f172a; text-align:center; font-size:22px; line-height: 1.4;}
+    
+    /* Tabs System */
+    .tabs {display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 25px;}
+    .tab-btn {padding:12px 8px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; color:#475569; cursor:pointer; font-weight:600; transition:0.3s; display:flex; align-items:center; justify-content:center; gap:8px; font-size: 13px;}
+    .tab-btn i {font-size: 18px;}
+    .tab-btn.active {background:#1e40af; color:white; border-color: #1e40af;}
+    .tab-btn:hover:not(.active) {background: #f1f5f9;}
+
+    /* Content Sections */
+    .service-section {display:none; animation: fadeIn 0.4s ease-out;}
+    .service-section.active {display:block;}
+    @keyframes fadeIn {from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+    .form-group {margin-bottom: 15px;}
+    label {display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 5px;}
+    input, select, textarea {width:100%; padding:12px; border-radius:6px; border:1px solid #cbd5e1; font-size:14px; outline: none;}
+    input:focus {border-color: #1e40af; box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);}
+
+    .btn-primary {background:#1e40af; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 10px;}
+    .btn-primary:hover {background:#1e3a8a;}
+
+    /* Toast Notification */
+    .toast {position:fixed; bottom:30px; right:30px; background:#1e40af; color:white; padding:15px 25px; border-radius:8px; box-shadow:0 10px 15px rgba(0,0,0,0.2); display:none; z-index:9999; animation: slideUp 0.4s;}
+    .toast.error {background:#e11d48;}
+    @keyframes slideUp {from{opacity:0; transform:translateY(50px);} to{opacity:1; transform:translateY(0);} }
+
+    footer {margin-top:auto; width:100%; text-align:center; padding:20px; background:#0f172a; color:#94a3b8; font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        <img src="../logo.png" alt="ECI Logo">
+        <span>Election Commission of India</span>
+    </div>
+    <div class="govt" style="font-size: 12px; text-align: right;">Government of India<br>डिजिटल भारत</div>
+</div>
+
+<div class="container">
+    <h2>e-EPIC Digital Services<br><span style="color: #1e40af; font-size: 18px;">डिजिटल मतदाता पहचान पत्र सेवाएं</span></h2>
+    
+    <div class="tabs">
+        <button class="tab-btn active" data-target="section-download"><i class='bx bxs-download'></i>Download</button>
+        <button class="tab-btn" data-target="section-verify"><i class='bx bxs-check-shield'></i>Verify</button>
+        <button class="tab-btn" data-target="section-face"><i class='bx bxs-user-circle'></i>Face Status</button>
+        <button class="tab-btn" data-target="section-mobile"><i class='bx bxs-phone'></i>Update Mobile</button>
+        <button class="tab-btn" data-target="section-correction"><i class='bx bxs-edit-alt'></i>Correction</button>
+        <button class="tab-btn" data-target="section-grievance"><i class='bx bxs-help-circle'></i>Help</button>
+    </div>
+    
+    <div id="section-download" class="service-section active">
+        <div class="form-group">
+            <label>EPIC Number (Use: ABC1234567)</label>
+            <input type="text" id="epicNumber" placeholder="Enter EPIC Number">
+        </div>
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+        </div>
+        <div class="form-group">
+            <label>Registered Mobile</label>
+            <input type="text" id="downloadMobile" placeholder="10 Digit Mobile Number">
+        </div>
+        <button class="btn-primary" onclick="sendOTP()">Send OTP</button>
+        
+        <div id="otpBox" style="margin-top: 20px; display: none;">
+            <label>Enter 6-Digit OTP</label>
+            <input type="text" id="otpInput" placeholder="Enter OTP received">
+            <button class="btn-primary" style="background: #10b981;" onclick="downloadEPIC()">Verify & Download PDF</button>
+        </div>
+    </div>
+
+    <div id="section-verify" class="service-section">
+        <label>Upload e-EPIC PDF File</label>
+        <input type="file" id="verifyPDF" accept=".pdf">
+        <button class="btn-primary" onclick="simulateAction('Verifying Digital Signature...')">Verify Certificate</button>
+    </div>
+
+    <div id="section-face" class="service-section">
+        <label>EPIC Number</label>
+        <input type="text" placeholder="Enter EPIC Number">
+        <button class="btn-primary" onclick="simulateAction('Checking Face Authentication Status...')">Check Status</button>
+    </div>
+
+    <div id="section-mobile" class="service-section">
+        <input type="text" placeholder="EPIC Number" style="margin-bottom: 10px;">
+        <input type="text" id="newMobileNumber" placeholder="New Mobile Number">
+        <button class="btn-primary" onclick="simulateAction('Request for Mobile Update Submitted!')">Update Mobile</button>
+    </div>
+
+    <div id="section-correction" class="service-section">
+        <select id="correctionType" style="margin-bottom: 10px;">
+            <option value="">Select Correction Category</option>
+            <option value="name">Name Correction</option>
+            <option value="address">Address Change</option>
+            <option value="photo">Photo Replacement</option>
+        </select>
+        <textarea placeholder="Enter details of correction needed..." rows="3"></textarea>
+        <button class="btn-primary" onclick="simulateAction('Correction Form Submitted (Form 8)')">Submit Request</button>
+    </div>
+
+    <div id="section-grievance" class="service-section">
+        <label>Your Issue</label>
+        <textarea id="grievanceDesc" rows="4" placeholder="Describe your problem here..."></textarea>
+        <button class="btn-primary" onclick="simulateAction('Grievance ID: ECI2026X45 Generated.')">Raise Ticket</button>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<footer>© 2026 Election Commission of India | Digital Identity Cell | v2.0</footer>
+
+<script>
+// Mock Database
+const demoEPICs = {
+    "ABC1234567": {dob:"2000-02-20", mobile:"9876543210"},
+    "XYZ9876543": {dob:"1995-05-15", mobile:"9123456780"}
+};
+
+let generatedOTP = null;
+
+// Improved Tab Logic
+const tabs = document.querySelectorAll('.tab-btn');
+const sections = document.querySelectorAll('.service-section');
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        sections.forEach(s => s.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetId = tab.getAttribute('data-target');
+        document.getElementById(targetId).classList.add('active');
+    });
+});
+
+// Toast System
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.className = isError ? 'toast error' : 'toast';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+}
+
+// Fixed OTP Logic
+function sendOTP() {
+    const epic = document.getElementById('epicNumber').value.trim();
+    const dob = document.getElementById('dob').value;
+    const mobile = document.getElementById('downloadMobile').value.trim();
+
+    if (!demoEPICs[epic]) {
+        return showToast("EPIC Number not found in records!", true);
+    }
+    if (dob !== demoEPICs[epic].dob) {
+        return showToast("Date of Birth mismatch!", true);
+    }
+    if (mobile !== demoEPICs[epic].mobile) {
+        return showToast("Mobile Number does not match records!", true);
+    }
+
+    generatedOTP = Math.floor(100000 + Math.random() * 900000);
+    document.getElementById('otpBox').style.display = 'block';
+    showToast(`SUCCESS: OTP sent to ${mobile.slice(-4)}. Demo OTP: ${generatedOTP}`);
+}
+
+function downloadEPIC() {
+    const userOtp = document.getElementById('otpInput').value.trim();
+    const epic = document.getElementById('epicNumber').value.trim();
+
+    if (userOtp == generatedOTP && generatedOTP !== null) {
+        const blob = new Blob([`OFFICIAL E-EPIC CERTIFICATE FOR EPIC: ${epic}\nIssued by Election Commission of India`], {type:'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; 
+        a.download = `e-EPIC_${epic}_2026.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("e-EPIC PDF Generated & Downloaded!");
+    } else {
+        showToast("Invalid OTP! Please check again.", true);
+    }
+}
+
+// Helper for other tabs
+function simulateAction(msg) {
+    showToast(msg);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECI STRATEGIC TERMINAL | National Command Center</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --eci-gold: #ffd700;
+            --neon-blue: #00d2ff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --danger: #ff4444;
+            --success: #00ff00;
+            --warning: #ffa500;
+            --bg-dark: #00050a;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        
+        body { 
+            background: var(--bg-dark); 
+            color: #e0e0e0; 
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Header Navigation --- */
+        .top-nav {
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 2px solid var(--eci-gold);
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+        .logo-box h1 { font-family: 'Orbitron'; color: var(--eci-gold); font-size: 1.3rem; letter-spacing: 2px; }
+        .live-indicator { color: var(--success); font-size: 0.7rem; font-weight: bold; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        .wrapper { display: flex; height: calc(100vh - 65px); }
+
+        /* --- Sidebar --- */
+        .sidebar { 
+            width: 80px; background: #000; border-right: 1px solid #111; 
+            display: flex; flex-direction: column; align-items: center; padding-top: 30px; 
+        }
+        .nav-icon { 
+            width: 50px; height: 50px; margin-bottom: 25px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; transition: 0.3s; color: #555; font-size: 1.2rem;
+            border: 1px solid transparent;
+        }
+        .nav-icon.active, .nav-icon:hover { 
+            background: var(--glass); color: var(--neon-blue); border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        /* --- Main Content Area --- */
+        .main-view { flex: 1; padding: 25px; overflow-y: auto; background: radial-gradient(circle at center, #001220 0%, #00050a 100%); }
+        .content-section { display: none; animation: fadeIn 0.4s ease; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        /* --- Stats Grid --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: var(--glass); border: 1px solid #222; padding: 20px; border-radius: 12px; border-left: 3px solid var(--eci-gold); backdrop-filter: blur(5px); }
+        .stat-box h4 { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-box h2 { font-size: 1.6rem; margin-top: 8px; font-family: 'Orbitron'; color: #fff; }
+
+        /* --- Panels & Tables --- */
+        .panel { background: var(--glass); border: 1px solid #222; padding: 20px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--eci-gold); border-bottom: 1px solid #333; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; color: #ccc; }
+        .party-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; background: rgba(0,210,255,0.1); color: var(--neon-blue); border: 1px solid rgba(0,210,255,0.2); }
+
+        /* --- Inputs & Buttons --- */
+        .ctrl-input { padding: 12px; background: #080c12; border: 1px solid #333; color: white; border-radius: 8px; flex: 1; font-family: 'Inter'; outline: none; }
+        .ctrl-input:focus { border-color: var(--neon-blue); }
+        
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-family: 'Orbitron'; font-size: 0.7rem; font-weight: bold; transition: 0.3s; text-transform: uppercase; }
+        .btn-start { background: var(--success); color: #000; }
+        .btn-pause { background: var(--warning); color: #000; }
+        .btn-logout { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-logout:hover { background: var(--danger); color: white; }
+
+        canvas { max-height: 250px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <div class="logo-box">
+            <h1>ECI COMMAND CENTER</h1>
+            <span class="live-indicator">● LIVE SATELLITE FEED ACTIVE | SECURE_ENCRYPTION_v3.2</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span id="adminName" style="font-weight:600; font-size:0.9rem; color: var(--neon-blue);">ADMIN_ROOT</span>
+            <button class="btn btn-logout" onclick="logout()">TERMINAL_EXIT</button>
+        </div>
+    </div>
+
+    <div class="wrapper">
+        <div class="sidebar">
+            <div class="nav-icon active" title="Dashboard" onclick="switchView('stats', this)">📊</div>
+            <div class="nav-icon" title="Live Voting Logs" onclick="switchView('live-voting', this)">🗳️</div>
+            <div class="nav-icon" title="Election Control" onclick="switchView('control', this)">⚙️</div>
+        </div>
+
+        <div class="main-view">
+            
+            <div id="view-stats" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-box"><h4>Total Registered</h4><h2 id="totalVoters">--</h2></div>
+                    <div class="stat-box"><h4>Live Turnout</h4><h2 id="liveTurnout">0%</h2></div>
+                    <div class="stat-box"><h4>Encrypted Votes</h4><h2 id="voteCount">0</h2></div>
+                    <div class="stat-box"><h4>System Health</h4><h2 style="color:var(--success)">OPTIMAL</h2></div>
+                </div>
+                
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+                    <div class="panel">
+                        <h3>Voter Inflow (Real-time Sync)</h3>
+                        <canvas id="liveChart"></canvas>
+                    </div>
+                    <div class="panel">
+                        <h3>Election Status</h3>
+                        <div style="margin-top:20px; text-align:center;">
+                            <div id="statusIndicator" style="width:20px; height:20px; background:var(--success); border-radius:50%; margin:0 auto; box-shadow: 0 0 10px var(--success);"></div>
+                            <p id="statusText" style="margin-top:10px; font-family:'Orbitron';">ACTIVE</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-live-voting" class="content-section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 style="color:var(--neon-blue)">REAL-TIME ELECTORAL LOGS (MONGODB_LIVE)</h3>
+                        <span style="color:#666; font-size:0.8rem;">Auto-syncing every 5s...</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Voter Name</th>
+                                <th>Voter ID (EPIC)</th>
+                                <th>Constituency</th>
+                                <th>Party Selection</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveVoteLogs">
+                            <tr><td colspan="6" style="text-align:center; padding:50px; color:#555;">Scanning Database for votes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-control" class="content-section">
+                <div class="panel">
+                    <h3 style="color:var(--eci-gold)">STRATEGIC CONSTITUENCY CONTROL</h3>
+                    <p style="margin: 15px 0; color: #888; font-size: 0.9rem;">Start or Pause the voting process. This action is logged globally.</p>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 25px; align-items: center;">
+                        <input id="constInput" class="ctrl-input" placeholder="Enter Constituency Name">
+                        <button class="btn btn-start" onclick="toggleElection('start')">ACTIVATE</button>
+                        <button class="btn btn-pause" onclick="toggleElection('pause')">PAUSE PROCESS</button>
+                    </div>
+                </div>
+
+                <div class="panel" style="border-left: 3px solid var(--danger);">
+                    <h3 style="color:var(--danger)">EMERGENCY PROTOCOL</h3>
+                    <p style="margin-top:10px; font-size:0.8rem;">Immediately suspend all digital voting channels across the national server.</p>
+                    <button class="btn" style="background:var(--danger); color:white; margin-top:15px;" onclick="emergencyLock()">LOCK NATIONAL SERVER</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:5000/api/admin";
+
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if(!user || user.role !== "ECI") {
+                window.location.href = "index.html"; 
+            } else {
+                document.getElementById('adminName').innerText = user.name.toUpperCase();
+                initCharts();
+                refreshDashboard();
+                setInterval(refreshDashboard, 15000); // Auto-refresh every 5 seconds
+            }
+        };
+        // 🔥 SOCKET CONNECT
+            const socket = io("http://localhost:5000");
+
+                // 🔥 LIVE UPDATE LISTENER
+                socket.on("voteUpdate", (data) => {
+                console.log("🔥 Live Vote Update:", data);
+
+    // Total votes calculate
+    let totalVotes = 0;
+    data.forEach(item => {
+        totalVotes += item.count;
+    });
+
+    // UI update
+    document.getElementById('voteCount').innerText = totalVotes;
+
+    // Optional: console me party-wise
+    data.forEach(item => {
+        console.log(item._id + " : " + item.count);
+    });
+});
+
+        function switchView(viewId, el) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        async function refreshDashboard() {
+            try {
+                // Fetch stats from server.js quick-stats route
+                const res = await fetch(`${API_BASE}/quick-stats`);
+                const data = await res.json();
+                
+                if(data.success) {
+                    document.getElementById('totalVoters').innerText = data.totalRegistered;
+                    document.getElementById('voteCount').innerText = data.totalVotes;
+                    document.getElementById('liveTurnout').innerText = data.turnout + "%";
+
+                    const logBody = document.getElementById('liveVoteLogs');
+                    if(data.recentVotes.length === 0) {
+                        logBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No votes recorded in this session.</td></tr>`;
+                    } else {
+                        logBody.innerHTML = data.recentVotes.map(v => `
+                            <tr>
+                                <td>${v.voteTime}</td>
+                                <td><b>${v.name}</b></td>
+                                <td>${v.voterId}</td>
+                                <td>${v.constituency}</td>
+                                <td><span class="party-tag">${v.votedParty}</span></td>
+                                <td style="color:var(--success); font-weight:bold;">VERIFIED ✅</td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) { 
+                console.error("Sync Error:", e);
+            }
+        }
+
+        async function toggleElection(action) {
+            const constituency = document.getElementById('constInput').value.trim() || "All";
+            try {
+                const res = await fetch(`${API_BASE}/quick-control`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ action, constituency })
+                });
+                const result = await res.json();
+                
+                if(result.success) {
+                    alert(`SYSTEM_MSG: Election ${action.toUpperCase()}ED for: ${constituency}`);
+                    updateStatusUI(result.status.isPaused);
+                }
+            } catch (e) { alert("Communication Failure."); }
+        }
+
+        function updateStatusUI(isPaused) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            if(isPaused) {
+                indicator.style.background = 'var(--warning)';
+                indicator.style.boxShadow = '0 0 10px var(--warning)';
+                text.innerText = "PAUSED";
+                text.style.color = 'var(--warning)';
+            } else {
+                indicator.style.background = 'var(--success)';
+                indicator.style.boxShadow = '0 0 10px var(--success)';
+                text.innerText = "ACTIVE";
+                text.style.color = 'var(--success)';
+            }
+        }
+
+        function emergencyLock() {
+            if(confirm("DANGER: This will lock all voting nodes. Proceed?")) {
+                toggleElection('pause');
+            }
+        }
+
+        function initCharts() {
+            const ctx = document.getElementById('liveChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['09:00', '11:00', '13:00', '15:00', '17:00'],
+                    datasets: [{
+                        label: 'Vote Flow',
+                        data: [5, 15, 40, 65, 85],
+                        borderColor: '#00d2ff',
+                        backgroundColor: 'rgba(0, 210, 255, 0.05)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { color: '#111' }, ticks: { color: '#555' } }
+                    }
+                }
+            });
+        }
+
+        function logout() {
+            if(confirm("Terminate Secure Admin Session?")) {
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</body>
+</html>

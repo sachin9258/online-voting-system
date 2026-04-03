@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Candidate Dashboard | ECI Portal</title>
+    <style>
+        :root { --blue: #003366; --gold: #ffcc00; --red: #d9534f; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
+        
+        /* Navigation */
+        .nav { background: var(--blue); color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .nav b { font-size: 1.2rem; letter-spacing: 1px; }
+        .user-header { font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; }
+        
+        /* Main UI */
+        .container { padding: 30px 5%; }
+        h2 { color: var(--blue); margin-bottom: 25px; border-left: 5px solid var(--gold); padding-left: 15px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .card { background: white; padding: 25px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s ease; border-bottom: 4px solid transparent; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0,0,0,0.1); border-bottom: 4px solid var(--gold); }
+        .card h3 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 10px; }
+        .card p { color: #666; font-size: 0.9rem; line-height: 1.4; }
+
+        /* Modal Logic */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); overflow-y: auto; }
+        .modal-content { background: white; margin: 3% auto; padding: 35px; width: 55%; border-radius: 15px; position: relative; animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .close { position: absolute; right: 25px; top: 15px; font-size: 30px; cursor: pointer; color: #888; }
+        .close:hover { color: var(--red); }
+
+        /* Form Elements */
+        label { font-weight: 600; display: block; margin-top: 15px; color: #444; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .save-btn { background: var(--blue); color: white; padding: 15px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 8px; margin-top: 20px; transition: 0.2s; }
+        .save-btn:hover { background: #002244; }
+        
+        .logout-btn { background: var(--red); border: none; color: white; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <div><b>🇮🇳 ECI CANDIDATE PORTAL</b></div>
+    <div id="userHeader" class="user-header">Fetching Profile...</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+    <h2 id="welcomeMsg">Welcome</h2>
+    <div class="grid">
+        <div class="card" onclick="openService('nomination')">
+            <h3>📝 Nomination (Form 2B)</h3>
+            <p>Update assets, education and manifesto for verification.</p>
+        </div>
+        <div class="card" onclick="openService('permission')">
+            <h3>📢 Suvidha Permissions</h3>
+            <p>Request Rally, Vehicle & Loudspeaker permits.</p>
+        </div>
+        <div class="card" onclick="openService('voter')">
+            <h3>📊 Voter Data</h3>
+            <p>Electoral Roll & Polling Map for your area.</p>
+        </div>
+        <div class="card" onclick="openService('expense')">
+            <h3>💰 Expenditure Log</h3>
+            <p>Log daily campaign spending for ECI audit.</p>
+        </div>
+        <div class="card" onclick="openService('complaint')">
+            <h3>⚖️ MCC Compliance</h3>
+            <p>Report Violations or check MCC notices.</p>
+        </div>
+    </div>
+</div>
+
+<div id="serviceModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+// 1. INITIAL LOAD (Direct DB Fetch via ID in URL)
+window.onload = async () => {
+    // URL se ID nikalna (e.g., candidate.html?id=123)
+    const urlParams = new URLSearchParams(window.location.search);
+    const candidateId = urlParams.get('id');
+
+    // Agar ID nahi hai, toh index par bhej do bina loop ke
+    if(!candidateId) {
+        alert("Session Expired or Invalid Access!");
+        window.location.href = "index.html";
+        return;
+    }
+    
+    try {
+        // Direct API call using ID
+        const res = await fetch(`/api/candidate/profile-by-id?id=${candidateId}`);
+        const data = await res.json();
+        
+        if(data.success) {
+            window.candidateData = data.candidate;
+            document.getElementById('userHeader').innerText = `👤 ${data.candidate.name} | ${data.candidate.party}`;
+            document.getElementById('welcomeMsg').innerText = `Welcome to ECI Dashboard, ${data.candidate.name}`;
+        } else {
+            window.location.href = "index.html";
+        }
+    } catch (err) { 
+        console.error("Data Load Error");
+        document.getElementById('userHeader').innerText = "Server Error";
+    }
+}
+
+// 2. DYNAMIC SERVICE FORMS
+function openService(type) {
+    const modal = document.getElementById('serviceModal');
+    const body = document.getElementById('modalBody');
+    const c = window.candidateData;
+    modal.style.display = "block";
+
+    if(type === 'nomination') {
+        body.innerHTML = `
+            <h2>Nomination (Form 2B)</h2>
+            <label>Educational Qualification</label>
+            <input id="edu" type="text" value="${c.education || ''}" placeholder="e.g. B.Tech Graduate">
+            <label>Total Assets (₹)</label>
+            <input id="assets" type="number" value="${c.assets || 0}">
+            <label>Criminal Records (if any)</label>
+            <textarea id="criminal">${c.criminalRecords || 'None'}</textarea>
+            <label>Election Manifesto</label>
+            <textarea id="manifesto" rows="4">${c.manifesto || ''}</textarea>
+            <button class="save-btn" onclick="saveData('nomination')">Update Nomination</button>`;
+    } 
+    else if(type === 'permission') {
+        body.innerHTML = `
+            <h2>Suvidha Permission</h2>
+            <label>Request For</label>
+            <select id="pType"><option>Rally</option><option>Vehicle Permit</option></select>
+            <input id="pLoc" type="text" placeholder="Location">
+            <input id="pDate" type="date">
+            <button class="save-btn" onclick="saveData('permission')">Request Token</button>`;
+    }
+    else if(type === 'expense') {
+        body.innerHTML = `
+            <h2>Expenditure Log</h2>
+            <input id="expAmt" type="number" placeholder="Amount Spent (₹)">
+            <textarea id="expNote" placeholder="Spent on?"></textarea>
+            <button class="save-btn" onclick="saveData('expense')">Log Expense</button>`;
+    }
+    else if(type === 'complaint') {
+        body.innerHTML = `
+            <h2>Report MCC Violation</h2>
+            <select id="vType"><option>Bribery</option><option>Hate Speech</option></select>
+            <textarea id="vDesc" placeholder="Details..."></textarea>
+            <button class="save-btn" onclick="saveData('complaint')">File Complaint</button>`;
+    }
+    else {
+        body.innerHTML = `<h2>Voter List</h2><p>Data for ${c.constituency} is loading...</p>`;
+    }
+}
+
+// 3. SAVE DATA
+async function saveData(type) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const candidateId = urlParams.get('id');
+    
+    let payload = {};
+    let endpoint = `/api/candidate/update-profile?id=${candidateId}`;
+
+    if(type === 'nomination') {
+        payload = {
+            education: document.getElementById('edu').value,
+            assets: document.getElementById('assets').value,
+            manifesto: document.getElementById('manifesto').value,
+            criminalRecords: document.getElementById('criminal').value
+        };
+    } else if (type === 'complaint') {
+        endpoint = "/api/candidate/file-complaint";
+        payload = {
+            candidateId: candidateId,
+            violationType: document.getElementById('vType').value,
+            description: document.getElementById('vDesc').value
+        };
+    }
+
+    try {
+        const res = await fetch(endpoint, {
+            method: (type === 'complaint' ? "POST" : "PUT"),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if(result.success) {
+            alert("✅ Successfully Sent to Election Officer!");
+            closeModal();
+            location.reload();
+        }
+    } catch (err) { alert("Server Connection Error"); }
+}
+
+function closeModal() { document.getElementById('serviceModal').style.display = "none"; }
+function logout() { window.location.href="index.html"; }
+</script>
+</body>
+</html>

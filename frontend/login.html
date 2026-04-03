@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Secure Face Login</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(120deg, #f4f4f9, #dbeafe);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
+h2 { margin-bottom: 8px; color: #1e3a8a; }
+.warning { color: #b91c1c; font-size: 14px; text-align: center; margin-bottom: 10px; }
+
+#video {
+  width: 260px; height: 260px;
+  border-radius: 50%; border: 6px solid #2563eb;
+  object-fit: cover; background: black;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+#snapshot { display: none; }
+
+button {
+  margin-top: 12px; padding: 14px 28px;
+  font-size: 16px; border-radius: 8px;
+  border: none; background: #2563eb;
+  color: white; font-weight: 600; cursor: pointer;
+}
+button:disabled { background: #aaa; cursor: not-allowed; }
+
+#countdown { font-size: 22px; font-weight: bold; margin-top: 8px; color: #1e3a8a; }
+
+#voterInfo {
+  display: none;
+  margin-top: 22px; background: white;
+  padding: 18px; border-radius: 12px;
+  width: 320px; text-align: center;
+  border: 2px solid #2563eb;
+}
+
+#voterInfo img {
+  width: 130px; height: 130px;
+  border-radius: 50%; object-fit: cover;
+  border: 4px solid #2563eb;
+  margin-bottom: 12px;
+}
+
+#proceedBtn {
+  display: none;
+  margin-top: 12px;
+  background: #16a34a;
+}
+</style>
+</head>
+
+<body>
+<h2>Secure Face Login</h2>
+
+<div class="warning">
+  ❌ No Sunglasses | ❌ No Mask<br>👁️ Look straight at camera
+</div>
+
+<video id="video" autoplay muted playsinline></video>
+<canvas id="snapshot"></canvas>
+
+<div id="countdown"></div>
+<button id="captureBtn">Start Verification</button>
+
+<div id="voterInfo">
+  <img id="voterPhoto" />
+  <p><b>Name:</b> <span id="name"></span></p>
+  <p><b>Voter ID:</b> <span id="voterId"></span></p>
+  <p><b>Aadhaar:</b> <span id="aadhaar"></span></p>
+  <button id="proceedBtn">Proceed to Voting</button>
+</div>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("snapshot");
+const captureBtn = document.getElementById("captureBtn");
+const countdownEl = document.getElementById("countdown");
+
+const voterInfo = document.getElementById("voterInfo");
+const nameSpan = document.getElementById("name");
+const voterIdSpan = document.getElementById("voterId");
+const aadhaarSpan = document.getElementById("aadhaar");
+const voterPhoto = document.getElementById("voterPhoto");
+const proceedBtn = document.getElementById("proceedBtn");
+
+/* ================= CAMERA ================= */
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+  } catch (err) {
+    alert("Camera permission denied");
+  }
+}
+startCamera();
+
+/* ================= COUNTDOWN ================= */
+function countdown(sec) {
+  return new Promise(resolve => {
+    let c = sec;
+    countdownEl.innerText = c;
+    const i = setInterval(() => {
+      c--;
+      countdownEl.innerText = c > 0 ? c : "Capturing…";
+      if (c === 0) {
+        clearInterval(i);
+        setTimeout(resolve, 400);
+      }
+    }, 1000);
+  });
+}
+
+/* ================= FACE LOGIN ================= */
+captureBtn.onclick = async () => {
+  if (video.videoWidth === 0) {
+    alert("Camera not ready");
+    return;
+  }
+
+  await countdown(3);
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+
+  canvas.toBlob(async blob => {
+    const fd = new FormData();
+    fd.append("photo", blob, "live.png");
+
+    try {
+      const res = await fetch("http://localhost:5000/api/voter/login-face", {
+        method: "POST",
+        body: fd
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.msg || "Face not matched");
+        return;
+      }
+
+      // 🔹 Save JWT in localStorage
+      localStorage.setItem("voterToken", data.token);
+
+      // Show voter info
+      voterInfo.style.display = "block";
+      nameSpan.innerText = data.voter.name;
+      voterIdSpan.innerText = data.voter.voterId;
+      aadhaarSpan.innerText = data.voter.aadhaarNumber;
+      voterPhoto.src = "http://localhost:5000/uploads/" + data.voter.photo;
+
+      // Show Proceed button
+      proceedBtn.style.display = "inline-block";
+
+    } catch (err) {
+      console.error(err);
+      alert("Server not responding");
+    }
+
+  }, "image/png");
+};
+
+/* ================= PROCEED BUTTON ================= */
+proceedBtn.onclick = () => {
+  window.location.href = "services/voting.html";
+};
+</script>
+
+</body>
+</html>

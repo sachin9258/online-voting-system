@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>स्मार्ट ई-रोल पोर्टल | प्रोजेक्ट 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --accent: #3b82f6;
+      --success: #10b981;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f1f5f9;
+      padding: 20px;
+      color: #475569;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .header .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      background: var(--success);
+    }
+
+    .header h1 { margin: 0; font-size: 28px; }
+    .header p { font-size: 14px; opacity: 0.9; margin: 5px 0 0; }
+
+    .main-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      padding: 40px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label { font-weight: 600; font-size: 14px; }
+
+    select {
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: 0.3s;
+      background: #fff;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    .btn-ai {
+      grid-column: span 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      cursor: not-allowed;
+      opacity: 0.5;
+      transition: 0.3s;
+    }
+
+    .btn-ai.enabled { cursor: pointer; opacity: 1; }
+
+    .btn-ai:hover.enabled {
+      transform: translateY(-2px);
+      background: #1e40af;
+      box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3);
+    }
+
+    #pdfPreview {
+      display: none;
+      grid-column: span 2;
+      margin-top: 20px;
+      padding: 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    iframe {
+      width: 100%;
+      height: 70vh;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    @media (max-width: 600px) {
+      .main-form { grid-template-columns: 1fr; }
+      .btn-ai { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="status">एआई सिस्टम सक्रिय</div>
+    <h1>चुनावी सेवाएँ 2026</h1>
+    <p>ड्राफ्ट रोल प्रबंधन प्रणाली</p>
+  </div>
+
+  <div class="main-form">
+    <div class="input-group">
+      <label><i class="fas fa-map"></i> राज्य / केंद्र शासित प्रदेश</label>
+      <select id="state" onchange="updateDistricts()">
+        <option value="">-- राज्य चुनें --</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fas fa-city"></i> जिला</label>
+      <select id="district" onchange="updateConstituencies()" disabled>
+        <option value="">-- पहले राज्य चुनें --</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fas fa-users"></i> विधानसभा क्षेत्र</label>
+      <select id="ac" disabled>
+        <option value="">-- पहले जिला चुनें --</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fas fa-school"></i> मतदान केंद्र</label>
+      <select id="ps">
+        <option>183 - प्राथमिक विद्यालय क0नं0-1 चीती</option>
+        <option>184 - प्राथमिक विद्यालय क0नं0-2 चीती</option>
+      </select>
+    </div>
+
+    <button class="btn-ai" id="pdfBtn">
+      <i class="fas fa-file-pdf"></i> चुनावी रोल देखें और डाउनलोड करें
+    </button>
+
+    <div id="pdfPreview">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <p style="font-weight:bold; color:var(--primary); margin:0;">
+          <i class="fas fa-file-alt"></i> <span id="pdfNameDisplay">देख रहे हैं:</span>
+        </p>
+        <button onclick="resetPreview()" style="background:none; border:none; cursor:pointer; color:red;">
+          <i class="fas fa-times"></i> बंद करें
+        </button>
+      </div>
+      <iframe id="pdfFrame" src=""></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+// PDF mapping: Dhyaan dein, HTML aur PDF ek hi folder 'services' mein hain
+const pdfData = {
+  "71-खै़र (SC)": "2026-EROLLGEN-S24-71-SIR-DraftRoll-Revision1-HIN-183-WI.pdf",
+  "default": "DOC.pdf"
+};
+
+const stateData = {
+  "उत्तर प्रदेश": ["अलीगढ़", "लखनऊ", "ग़ाज़ियाबाद"],
+  "दिल्ली": ["नई दिल्ली"]
+};
+
+const acData = {
+  "अलीगढ़": ["71-खै़र (SC)", "72-बरौली", "73-अत्रौली"],
+  "लखनऊ": ["लखनऊ पश्चिम", "लखनऊ उत्तर"]
+};
+
+// Elements
+const stateDropdown = document.getElementById('state');
+const distDropdown = document.getElementById('district');
+const acDropdown = document.getElementById('ac');
+const pdfBtn = document.getElementById('pdfBtn');
+const pdfFrame = document.getElementById('pdfFrame');
+const preview = document.getElementById('pdfPreview');
+
+// Populate states
+Object.keys(stateData).sort().forEach(s => stateDropdown.add(new Option(s, s)));
+
+function updateDistricts() {
+  const selectedState = stateDropdown.value;
+  distDropdown.innerHTML = '<option value="">-- जिला चुनें --</option>';
+  acDropdown.innerHTML = '<option value="">-- पहले जिला चुनें --</option>';
+  acDropdown.disabled = true;
+  resetPreview();
+
+  if (selectedState && stateData[selectedState]) {
+    stateData[selectedState].forEach(d => distDropdown.add(new Option(d, d)));
+    distDropdown.disabled = false;
+  } else {
+    distDropdown.disabled = true;
+  }
+  updateButtonState();
+}
+
+function updateConstituencies() {
+  const selectedDist = distDropdown.value;
+  acDropdown.innerHTML = '<option value="">-- विधानसभा क्षेत्र चुनें --</option>';
+  resetPreview();
+
+  if (selectedDist && acData[selectedDist]) {
+    acData[selectedDist].forEach(a => acDropdown.add(new Option(a, a)));
+    acDropdown.disabled = false;
+  } else {
+    acDropdown.disabled = true;
+  }
+  updateButtonState();
+}
+
+function updateButtonState() {
+  if (stateDropdown.value && distDropdown.value && acDropdown.value) {
+    pdfBtn.disabled = false;
+    pdfBtn.classList.add('enabled');
+  } else {
+    pdfBtn.disabled = true;
+    pdfBtn.classList.remove('enabled');
+  }
+}
+
+function resetPreview() {
+  preview.style.display = 'none';
+  pdfFrame.src = '';
+  pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> चुनावी रोल देखें और डाउनलोड करें';
+  pdfBtn.style.background = '#1e3a8a';
+}
+
+function loadPDF() {
+  const ac = acDropdown.value;
+  const fileName = pdfData[ac] || pdfData['default'];
+  
+  pdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> लोड हो रहा है...';
+  pdfBtn.style.background = '#2563eb';
+
+  setTimeout(() => {
+    // Bina folder name ke direct file name (kyun ki file same folder mein hai)
+    pdfFrame.src = fileName; 
+    document.getElementById('pdfNameDisplay').innerText = "देख रहे हैं: " + ac;
+    preview.style.display = 'block';
+    
+    pdfBtn.innerHTML = '<i class="fas fa-check"></i> दस्तावेज़ लोड हो गया';
+    pdfBtn.style.background = '#10b981';
+    preview.scrollIntoView({ behavior: 'smooth' });
+  }, 600);
+}
+
+// Event Listeners
+acDropdown.addEventListener('change', updateButtonState);
+pdfBtn.addEventListener('click', () => {
+  if (!pdfBtn.classList.contains('enabled')) return;
+  loadPDF();
+});
+
+</script>
+
+</body>
+</html>

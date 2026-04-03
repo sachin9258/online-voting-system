@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLO Call Booking</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#f5f5f5;
+  }
+
+  /* Header */
+  header {
+    background:#007bff;
+    color:#fff;
+    padding:15px 20px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    position: sticky;
+    top:0;
+    z-index:100;
+  }
+
+  /* Container */
+  .container {
+    max-width: 900px;
+    margin: 20px auto;
+    background:#fff;
+    border-radius:10px;
+    padding:20px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+  }
+
+  h2 {
+    text-align:center;
+    margin-bottom:20px;
+    color:#333;
+  }
+
+  /* BLO Table */
+  table {
+    width:100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding:12px;
+    border-bottom:1px solid #ddd;
+    text-align:center;
+  }
+  th {
+    background:#007bff;
+    color:#fff;
+  }
+  tr:hover {
+    background:#f1f1f1;
+    cursor:pointer;
+  }
+  td img {
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    object-fit:cover;
+  }
+  .call-btn {
+    padding:5px 10px;
+    background:#28a745;
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .call-btn:hover {
+    background:#218838;
+  }
+
+  /* Helpline Section */
+  .helpline {
+    margin-top:30px;
+    padding:15px;
+    background:#ffeedd;
+    border-radius:8px;
+    text-align:center;
+  }
+  .helpline img {
+    width:50px;
+    height:50px;
+    margin:0 10px;
+    vertical-align:middle;
+  }
+
+  /* Footer */
+  footer {
+    background:#333;
+    color:#fff;
+    text-align:center;
+    padding:15px 20px;
+    margin-top:20px;
+  }
+
+  /* Chatbot Floating Button */
+  .chatbot {
+    position: fixed;
+    bottom:20px;
+    right:20px;
+    background:#007bff;
+    color:#fff;
+    padding:15px;
+    border-radius:50%;
+    font-size:24px;
+    cursor:pointer;
+    z-index:1000;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER / NAV -->
+<div class="header">
+  <div class="nav">
+    <div class="left">
+      <div class="logo">
+        <img src="../logo.png" alt="ECI">
+        <span>ELECTION COMMISSION OF INDIA</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="search">
+        <input type="text" placeholder="Search..." id="searchInput">
+        <button onclick="search()">Go</button>
+      </div>
+      <button id="loginBtn">Login</button>
+      <div class="ind"><img src="../gov.svg" class="invert" alt="gov"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN POPUP -->
+<div class="login-box" id="loginBox">
+  <span class="close" onclick="closeLogin()">✖</span>
+  <h3>Login</h3>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <div class="captcha">
+    <span id="captchaText"></span>
+    <button onclick="generateCaptcha()">↻</button>
+  </div>
+  <input type="text" id="captchaInput" placeholder="Enter Captcha">
+  <button onclick="login()">Register / Login</button>
+</div>
+
+<div class="container">
+  <h2>Book a Call with BLO</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Ward</th>
+        <th>Vidhan Sabha</th>
+        <th>Contact No</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><img src="BLO.webp" alt="BLO Image"></td>
+        <td>Shyam Kumar</td>
+        <td>12</td>
+        <td>Lucknow West</td>
+        <td><a href="tel:9999999999"><button class="call-btn">📞 9999999999</button></a></td>
+      </tr>
+      <tr>
+        <td><img src="BLO.webp" alt="BLO Image"></td>
+        <td>Geeta Singh</td>
+        <td>15</td>
+        <td>Lucknow East</td>
+        <td><a href="tel:8888888888"><button class="call-btn">📞 8888888888</button></a></td>
+      </tr>
+      <tr>
+        <td><img src="BLO.webp" alt="BLO Image"></td>
+        <td>Ramesh Yadav</td>
+        <td>20</td>
+        <td>Aligarh North</td>
+        <td><a href="tel:7777777777"><button class="call-btn">📞 7777777777</button></a></td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- Helpline Section -->
+  <div class="helpline">
+    <h4>Government Helplines</h4>
+    <img src="UP112.cms" alt="UP112">
+    <img src="UP108" alt="Ambulance 108">
+    <img src="CM.avif" alt="CM Helpline">
+    <img src="../logo.png" alt="ECI">
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<div class="footer">
+  <div class="footer-container">
+    <div class="footer-section about">
+      <h3>About ECI</h3>
+      <p>The Election Commission of India is responsible for administering election processes in India at national and state levels. Ensuring free and fair elections is our priority.</p>
+    </div>
+    <div class="footer-section links">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="#">Voter Registration</a></li>
+        <li><a href="#">Electoral Roll</a></li>
+        <li><a href="#">Candidate Info</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="https://voters.eci.gov.in/">ECI main website</a></li>
+      </ul>
+    </div>
+    <div class="footer-section contact">
+      <h3>Contact Us</h3>
+      <p>Election Commission of India</p>
+      <p>Nelson Mandela Marg, New Delhi - 110001</p>
+      <p>Email: info@eci.gov.in</p>
+      <p>Phone: +91-11-23385201</p>
+    </div>
+    <div class="footer-section social">
+      <h3>Follow Us</h3>
+      <div class="social-icons">
+        <a href="#"><img src="../icons8-facebook-circled.gif" alt="Facebook"></a>
+        <a href="#"><img src="../icons8-twitter-bird.gif" alt="Twitter"></a>
+        <a href="#"><img src="../icons8-youtube-logo.gif" alt="YouTube"></a>
+        <a href="#"><img src="../icons8-linkedin-logo.gif" alt="LinkedIn"></a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 Election Commission of India. All rights reserved.
+  </div>
+
+</body>
+</html>

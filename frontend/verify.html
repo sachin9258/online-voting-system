@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Identity | ECI</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f0f4f8;
+  margin:0;
+}
+.header{
+  background:#0a7a3c;
+  color:#fff;
+  padding:15px;
+  text-align:center;
+}
+.container{
+  max-width:450px;
+  background:#fff;
+  margin:40px auto;
+  padding:25px;
+  border-radius:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+}
+button{
+  background:#0a7a3c;
+  color:#fff;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+button:disabled{
+  background:#999;
+}
+video,canvas{
+  width:100%;
+  border-radius:8px;
+  margin-top:10px;
+}
+.status{
+  text-align:center;
+  font-weight:600;
+  margin-top:10px;
+}
+.processing{
+  color:orange;
+}
+.success{
+  color:green;
+}
+.user-card{
+  background:#f9f9f9;
+  padding:15px;
+  border-radius:8px;
+  margin-top:15px;
+}
+.user-card img{
+  width:100%;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Voter Verification</h2>
+</div>
+
+<div class="container">
+
+<!-- STEP 1 MOBILE -->
+<div id="step1">
+  <input type="text" id="mobile" placeholder="Enter registered mobile number">
+  <button onclick="sendOTP()">Send OTP</button>
+</div>
+
+<!-- STEP 2 OTP -->
+<div id="step2" style="display:none;">
+  <input type="text" id="otpInput" placeholder="Enter OTP">
+  <button onclick="verifyOTP()">Verify OTP</button>
+</div>
+
+<!-- STEP 3 FACE -->
+<div id="step3" style="display:none;">
+  <video id="video" autoplay></video>
+  <button onclick="captureFace()">Capture Face</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <p id="faceStatus" class="status processing"></p>
+</div>
+
+<!-- USER DATA -->
+<div id="userData" style="display:none;"></div>
+
+</div>
+
+<script>
+let generatedOTP;
+let matchAttempts = 0;
+
+// ================= OTP =================
+function sendOTP(){
+  const mobile = document.getElementById('mobile').value.trim();
+  if(mobile.length !== 10){
+    alert("Enter valid mobile number");
+    return;
+  }
+  generatedOTP = Math.floor(100000 + Math.random()*900000);
+  alert("OTP (Simulation): " + generatedOTP);
+  document.getElementById('step2').style.display = "block";
+}
+
+function verifyOTP(){
+  if(document.getElementById('otpInput').value == generatedOTP){
+    document.getElementById('step1').style.display = "none";
+    document.getElementById('step2').style.display = "none";
+    startCamera();
+    document.getElementById('step3').style.display = "block";
+  } else {
+    alert("Invalid OTP");
+  }
+}
+
+// ================= CAMERA =================
+function startCamera(){
+  navigator.mediaDevices.getUserMedia({video:true})
+    .then(stream => video.srcObject = stream);
+}
+
+function captureFace(){
+  const canvas = document.getElementById('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video,0,0);
+  verifyFace();
+}
+
+// ================= FACE MATCH (SIMULATION LOOP) =================
+function verifyFace(){
+  const status = document.getElementById('faceStatus');
+  status.innerText = "Face matching in progress...";
+  status.className = "status processing";
+
+  const interval = setInterval(()=>{
+    matchAttempts++;
+
+    if(matchAttempts >= 3){ // backend match success
+      clearInterval(interval);
+      status.innerText = "Face Verified Successfully ✅";
+      status.className = "status success";
+      fetchUserData();
+    }
+  }, 2000);
+}
+
+// ================= FETCH USER DATA =================
+function fetchUserData(){
+  document.getElementById('userData').style.display = "block";
+  document.getElementById('userData').innerHTML = `
+    <div class="user-card">
+      <h3>Verification Successful</h3>
+      <p><b>Name:</b> Sachin Sharma</p>
+      <p><b>Voter ID:</b> ECI202600123</p>
+      <p><b>Constituency:</b> Lucknow</p>
+      <img src="face_sample.jpg">
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

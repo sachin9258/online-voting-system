@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Name | ECI</title>
+
+<style>
+body{font-family:Arial;background:#f4f6f8;margin:0}
+.header{background:#0f172a;color:#fff;padding:15px;text-align:center}
+.search-box{text-align:center;margin:30px}
+.search-box input{padding:10px;width:260px}
+.search-box button{padding:10px 20px;background:#0a7a3c;color:#fff;border:none}
+table{width:90%;margin:auto;border-collapse:collapse;background:#fff}
+th,td{padding:12px;border-bottom:1px solid #ddd}
+th{background:#0a7a3c;color:#fff}
+img{height:60px;border-radius:6px}
+.no-data{text-align:center;color:red;margin-top:20px}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Search Registered Voter / Candidate</h2>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchName" placeholder="Enter full or partial name">
+  <button onclick="searchUser()">Search</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+function searchUser(){
+  const name = document.getElementById('searchName').value.trim();
+  const resultDiv = document.getElementById('result');
+
+  if(!name){
+    resultDiv.innerHTML = '<p class="no-data">Enter name to search</p>';
+    return;
+  }
+
+  fetch(`http://localhost:3000/api/search?name=${name}`)
+    .then(res => res.json())
+    .then(data => {
+
+      if(data.length === 0){
+        resultDiv.innerHTML = '<p class="no-data">No record found</p>';
+        return;
+      }
+
+      let html = `
+      <table>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Voter ID</th>
+          <th>Constituency</th>
+          <th>Face</th>
+        </tr>`;
+
+      data.forEach(u => {
+        html += `
+        <tr>
+          <td>${u.full_name}</td>
+          <td>${u.role}</td>
+          <td>${u.voter_id}</td>
+          <td>${u.constituency}</td>
+          <td><img src="${u.face_image}"></td>
+        </tr>`;
+      });
+
+      html += '</table>';
+      resultDiv.innerHTML = html;
+    })
+    .catch(()=>{
+      resultDiv.innerHTML = '<p class="no-data">Server error</p>';
+    });
+}
+</script>
+
+</body>
+</html>
